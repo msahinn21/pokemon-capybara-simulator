@@ -1,4 +1,4 @@
-import { createSimulationResults } from './models';
+import { createSimulationResults, TIME_CONSTANTS } from './models';
 
 /**
  * Runs a complete game simulation based on the provided configuration
@@ -29,6 +29,7 @@ export const runSimulation = async (gameConfig, updateProgress = () => {}, updat
     currentDay: 1,
     pokemonCaught: 0,
     pokemonEvolved: 0,
+    totalGameDays: 0, // Track total days played for real player time calculation
   };
   
   updateLog('Simulation started');
@@ -47,6 +48,9 @@ export const runSimulation = async (gameConfig, updateProgress = () => {}, updat
     // Loop through days in the chapter
     while (player.currentDay <= chapter.days && !isGameOver) {
       updateLog(`Day ${player.currentDay} of Chapter ${player.currentChapter + 1}`);
+      
+      // Increment total game days - Each day is TIME_CONSTANTS.SECONDS_PER_DAY seconds of real player time
+      player.totalGameDays++;
       
       // Process events for the day
       processEvents(player, chapter, results, updateLog);
@@ -109,7 +113,8 @@ export const runSimulation = async (gameConfig, updateProgress = () => {}, updat
         totalChapters: chapters.length,
         day: player.currentDay,
         currentPower: calculatePartyPower(player.party),
-        requiredPower: chapter.requiredPowerToComplete
+        requiredPower: chapter.requiredPowerToComplete,
+        totalGameDays: player.totalGameDays
       };
       
       updateProgress(progress);
@@ -122,7 +127,7 @@ export const runSimulation = async (gameConfig, updateProgress = () => {}, updat
     }
   }
   
-  // Calculate final results
+  // Calculate final results for simulation time
   const endTime = Date.now();
   const totalPlaytimeSeconds = Math.floor((endTime - startTime) / 1000);
   
@@ -131,14 +136,40 @@ export const runSimulation = async (gameConfig, updateProgress = () => {}, updat
   results.totalPlaytimeHours = Math.floor(totalPlaytimeSeconds / 3600);
   results.totalPlaytimeDays = Math.floor(totalPlaytimeSeconds / 86400);
   
+  // Calculate real player time (based on 2 seconds per in-game day)
+  results.totalGameDays = player.totalGameDays;
+  const realPlayerTimeSeconds = player.totalGameDays * TIME_CONSTANTS.SECONDS_PER_DAY;
+  
+  results.realPlayerTimeSeconds = realPlayerTimeSeconds;
+  results.realPlayerTimeMinutes = Math.floor(realPlayerTimeSeconds / 60);
+  results.realPlayerTimeHours = Math.floor(realPlayerTimeSeconds / 3600);
+  results.realPlayerTimeDays = Math.floor(realPlayerTimeSeconds / 86400);
+  
+  // Add other statistics
   results.highestChapterReached = player.currentChapter;
   results.highestDayReached = player.currentDay;
   results.totalPokemonCaught = player.pokemonCaught;
   results.totalPokemonEvolved = player.pokemonEvolved;
   
   updateLog('Simulation completed');
+  updateLog(`Total in-game days: ${player.totalGameDays}`);
+  updateLog(`Estimated real player time: ${formatTime(realPlayerTimeSeconds)}`);
   
   return results;
+};
+
+// Helper function to format time nicely
+const formatTime = (totalSeconds) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  let result = '';
+  if (hours > 0) result += `${hours} hour${hours !== 1 ? 's' : ''} `;
+  if (minutes > 0) result += `${minutes} minute${minutes !== 1 ? 's' : ''} `;
+  if (seconds > 0 || (hours === 0 && minutes === 0)) result += `${seconds} second${seconds !== 1 ? 's' : ''}`;
+  
+  return result.trim();
 };
 
 // Helper function for sleep
