@@ -14,11 +14,19 @@ export const exportToExcel = (results, filename = 'simulation-results.xlsx') => 
   const summaryData = [
     ['Pokemon Capybara Simulator - Results Summary'],
     [''],
-    ['Playthrough Statistics'],
-    ['Total Playtime (seconds)', results.totalPlaytimeSeconds],
-    ['Total Playtime (minutes)', results.totalPlaytimeMinutes],
-    ['Total Playtime (hours)', results.totalPlaytimeHours],
-    ['Total Playtime (days)', results.totalPlaytimeDays],
+    ['Time Statistics'],
+    ['Total In-Game Days', results.totalGameDays],
+    [''],
+    ['Real Player Time (estimated)'],
+    ['Total Real Player Time (seconds)', results.realPlayerTimeSeconds],
+    ['Total Real Player Time (minutes)', results.realPlayerTimeMinutes],
+    ['Total Real Player Time (hours)', results.realPlayerTimeHours],
+    ['Total Real Player Time (days)', results.realPlayerTimeDays],
+    [''],
+    ['Simulation Time (actual)'],
+    ['Total Simulation Time (seconds)', results.totalPlaytimeSeconds],
+    ['Total Simulation Time (minutes)', results.totalPlaytimeMinutes],
+    ['Total Simulation Time (hours)', results.totalPlaytimeHours],
     [''],
     ['Progress Statistics'],
     ['Chapters Completed', results.chaptersCompleted],
@@ -30,6 +38,7 @@ export const exportToExcel = (results, filename = 'simulation-results.xlsx') => 
     ['Battles Won', results.battlesWon],
     ['Battles Lost', results.battlesLost],
     ['Win Rate (%)', results.totalBattles > 0 ? (results.battlesWon / results.totalBattles * 100).toFixed(2) : 0],
+    ['Battles Per Day (Average)', results.totalGameDays > 0 ? (results.totalBattles / results.totalGameDays).toFixed(2) : 0],
     [''],
     ['Pokemon Statistics'],
     ['Total Pokemon Caught', results.totalPokemonCaught],
@@ -39,6 +48,7 @@ export const exportToExcel = (results, filename = 'simulation-results.xlsx') => 
     ['Gold Earned', results.goldEarned],
     ['Gold Spent', results.goldSpent],
     ['Net Gold', results.goldEarned - results.goldSpent],
+    ['Gold Per Day (Average)', results.totalGameDays > 0 ? (results.goldEarned / results.totalGameDays).toFixed(2) : 0],
     [''],
     ['Item Statistics'],
     ['Items Found', results.itemsFound],
@@ -51,16 +61,22 @@ export const exportToExcel = (results, filename = 'simulation-results.xlsx') => 
   // Create power progression sheet
   if (results.totalPowerProgression && results.totalPowerProgression.length > 0) {
     const powerData = [
-      ['Chapter', 'Day', 'Total Power']
+      ['Chapter', 'Day', 'Total Power', 'Estimated Time (seconds)', 'Estimated Time (min:sec)']
     ];
     
-    for (const entry of results.totalPowerProgression) {
+    results.totalPowerProgression.forEach((entry, index) => {
+      const estimatedSeconds = index * 2; // Each day takes 2 seconds of real player time
+      const minutes = Math.floor(estimatedSeconds / 60);
+      const seconds = estimatedSeconds % 60;
+      
       powerData.push([
         entry.chapter,
         entry.day,
-        entry.totalPower
+        entry.totalPower,
+        estimatedSeconds,
+        `${minutes}:${seconds.toString().padStart(2, '0')}`
       ]);
-    }
+    });
     
     const powerSheet = XLSX.utils.aoa_to_sheet(powerData);
     XLSX.utils.book_append_sheet(workbook, powerSheet, 'Power Progression');
@@ -69,14 +85,23 @@ export const exportToExcel = (results, filename = 'simulation-results.xlsx') => 
   // Create chapter progression sheet
   if (results.chapterProgression && results.chapterProgression.length > 0) {
     const chapterData = [
-      ['Chapter', 'Day', 'Result']
+      ['Chapter', 'Day', 'Result', 'Estimated Time (seconds)', 'Estimated Time (min:sec)']
     ];
     
+    let cumulativeDays = 0;
+    
     for (const entry of results.chapterProgression) {
+      cumulativeDays += entry.day;
+      const estimatedSeconds = cumulativeDays * 2; // Each day takes 2 seconds of real player time
+      const minutes = Math.floor(estimatedSeconds / 60);
+      const seconds = estimatedSeconds % 60;
+      
       chapterData.push([
         entry.chapter,
         entry.day,
-        entry.result
+        entry.result,
+        estimatedSeconds,
+        `${minutes}:${seconds.toString().padStart(2, '0')}`
       ]);
     }
     
