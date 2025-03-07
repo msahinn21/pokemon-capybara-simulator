@@ -6,9 +6,9 @@ import { createSimulationResults } from './models';
  * @param {Object} gameConfig - The complete game configuration
  * @param {Function} updateProgress - Callback to update simulation progress
  * @param {Function} updateLog - Callback to update simulation log
- * @returns {Object} Simulation results
+ * @returns {Promise<Object>} Simulation results
  */
-export const runSimulation = (gameConfig, updateProgress = () => {}, updateLog = () => {}) => {
+export const runSimulation = async (gameConfig, updateProgress = () => {}, updateLog = () => {}) => {
   const { chapters, pokemons, simulationConfig } = gameConfig;
   
   if (!chapters || chapters.length === 0) {
@@ -117,7 +117,7 @@ export const runSimulation = (gameConfig, updateProgress = () => {}, updateLog =
       // Add some delay if configured (for visualization)
       if (simulationConfig?.speed) {
         const delay = Math.floor(1000 / simulationConfig.speed);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await sleep(delay);
       }
     }
   }
@@ -139,6 +139,11 @@ export const runSimulation = (gameConfig, updateProgress = () => {}, updateLog =
   updateLog('Simulation completed');
   
   return results;
+};
+
+// Helper function for sleep
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
 };
 
 /**
