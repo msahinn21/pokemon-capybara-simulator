@@ -27,6 +27,11 @@ export const EVENT_TYPES = {
   TRAINER_BATTLE: 'Trainer Battle',
 };
 
+// Constants for time calculation
+export const TIME_CONSTANTS = {
+  SECONDS_PER_DAY: 2, // Each in-game day takes 2 seconds of real player time
+};
+
 /**
  * Creates a new Pokemon object
  */
@@ -155,10 +160,20 @@ export const createPlayer = (initialParty = []) => {
  */
 export const createSimulationResults = () => {
   return {
+    // Simulation time (actual time taken to run the simulation)
     totalPlaytimeSeconds: 0,
     totalPlaytimeMinutes: 0,
     totalPlaytimeHours: 0,
     totalPlaytimeDays: 0,
+    
+    // Real player time (estimated time a real player would spend)
+    realPlayerTimeSeconds: 0,
+    realPlayerTimeMinutes: 0,
+    realPlayerTimeHours: 0,
+    realPlayerTimeDays: 0,
+    totalGameDays: 0, // Total number of in-game days played
+    
+    // Game progress statistics
     chaptersCompleted: 0,
     highestChapterReached: 0,
     highestDayReached: 0,
