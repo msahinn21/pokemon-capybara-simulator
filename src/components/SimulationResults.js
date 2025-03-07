@@ -72,13 +72,29 @@ const SimulationResults = ({ results }) => {
               <Card>
                 <CardContent>
                   <Typography color="text.secondary" gutterBottom>
-                    Total Playtime
+                    Total In-Game Days
                   </Typography>
                   <Typography variant="h4">
-                    {results.totalPlaytimeMinutes} min
+                    {results.totalGameDays}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {results.totalPlaytimeSeconds} seconds
+                    days
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card>
+                <CardContent>
+                  <Typography color="text.secondary" gutterBottom>
+                    Real Player Time
+                  </Typography>
+                  <Typography variant="h4">
+                    {results.realPlayerTimeMinutes} min
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {results.realPlayerTimeSeconds} seconds
                   </Typography>
                 </CardContent>
               </Card>
@@ -117,22 +133,6 @@ const SimulationResults = ({ results }) => {
                 </CardContent>
               </Card>
             </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Typography color="text.secondary" gutterBottom>
-                    Pokemon Caught
-                  </Typography>
-                  <Typography variant="h4">
-                    {results.totalPokemonCaught}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Evolved: {results.totalPokemonEvolved}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
           </Grid>
         </Grid>
         
@@ -151,18 +151,49 @@ const SimulationResults = ({ results }) => {
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <Typography variant="h6" gutterBottom>
-                    Playthrough Statistics
+                    Time Statistics
                   </Typography>
                   
                   <List dense>
                     <ListItem>
                       <ListItemText 
-                        primary="Total Playtime" 
+                        primary="Total In-Game Days" 
+                        secondary={results.totalGameDays} 
+                      />
+                    </ListItem>
+                    <Divider component="li" />
+                    
+                    <ListItem>
+                      <ListItemText 
+                        primary="Estimated Real Player Time" 
+                        secondary={`${results.realPlayerTimeHours} hours, ${results.realPlayerTimeMinutes % 60} minutes, ${results.realPlayerTimeSeconds % 60} seconds`} 
+                      />
+                    </ListItem>
+                    <Divider component="li" />
+                    
+                    <ListItem>
+                      <ListItemText 
+                        primary="Simulation Runtime" 
                         secondary={`${results.totalPlaytimeHours} hours, ${results.totalPlaytimeMinutes % 60} minutes, ${results.totalPlaytimeSeconds % 60} seconds`} 
                       />
                     </ListItem>
                     <Divider component="li" />
                     
+                    <ListItem>
+                      <ListItemText 
+                        primary="Time Ratio" 
+                        secondary={`1 simulation second = ${results.totalPlaytimeSeconds > 0 ? (results.realPlayerTimeSeconds / results.totalPlaytimeSeconds).toFixed(2) : 0} real player seconds`} 
+                      />
+                    </ListItem>
+                  </List>
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    Game Progress
+                  </Typography>
+                  
+                  <List dense>
                     <ListItem>
                       <ListItemText 
                         primary="Chapters Completed" 
@@ -183,6 +214,14 @@ const SimulationResults = ({ results }) => {
                       <ListItemText 
                         primary="Highest Day Reached" 
                         secondary={results.highestDayReached} 
+                      />
+                    </ListItem>
+                    <Divider component="li" />
+                    
+                    <ListItem>
+                      <ListItemText 
+                        primary="Pokemon Statistics" 
+                        secondary={`Caught: ${results.totalPokemonCaught} | Evolved: ${results.totalPokemonEvolved}`} 
                       />
                     </ListItem>
                   </List>
@@ -220,14 +259,14 @@ const SimulationResults = ({ results }) => {
                     
                     <ListItem>
                       <ListItemText 
-                        primary="Pokemon Statistics" 
-                        secondary={`Caught: ${results.totalPokemonCaught} | Evolved: ${results.totalPokemonEvolved}`} 
+                        primary="Battles Per Day (Average)" 
+                        secondary={results.totalGameDays > 0 ? (results.totalBattles / results.totalGameDays).toFixed(2) : 0} 
                       />
                     </ListItem>
                   </List>
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6}>
                   <Typography variant="h6" gutterBottom>
                     Economy Statistics
                   </Typography>
@@ -271,6 +310,19 @@ const SimulationResults = ({ results }) => {
                         </CardContent>
                       </Card>
                     </Grid>
+                    
+                    <Grid item xs={12}>
+                      <Card>
+                        <CardContent>
+                          <Typography color="text.secondary" gutterBottom>
+                            Gold Per Day (Average)
+                          </Typography>
+                          <Typography variant="h5">
+                            {results.totalGameDays > 0 ? (results.goldEarned / results.totalGameDays).toFixed(2) : 0}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
                   </Grid>
                 </Grid>
               </Grid>
@@ -291,16 +343,25 @@ const SimulationResults = ({ results }) => {
                           <TableCell>Chapter</TableCell>
                           <TableCell>Day</TableCell>
                           <TableCell>Total Power</TableCell>
+                          <TableCell>Estimated Time (min:sec)</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {results.totalPowerProgression.map((entry, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{entry.chapter}</TableCell>
-                            <TableCell>{entry.day}</TableCell>
-                            <TableCell>{entry.totalPower.toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
+                        {results.totalPowerProgression.map((entry, index) => {
+                          // Calculate estimated time (2 seconds per game day)
+                          const estimatedSeconds = index * 2;
+                          const minutes = Math.floor(estimatedSeconds / 60);
+                          const seconds = estimatedSeconds % 60;
+                          
+                          return (
+                            <TableRow key={index}>
+                              <TableCell>{entry.chapter}</TableCell>
+                              <TableCell>{entry.day}</TableCell>
+                              <TableCell>{entry.totalPower.toFixed(2)}</TableCell>
+                              <TableCell>{`${minutes}:${seconds.toString().padStart(2, '0')}`}</TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -327,27 +388,41 @@ const SimulationResults = ({ results }) => {
                           <TableCell>Chapter</TableCell>
                           <TableCell>Day</TableCell>
                           <TableCell>Result</TableCell>
+                          <TableCell>Estimated Time (min:sec)</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {results.chapterProgression.map((entry, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{entry.chapter}</TableCell>
-                            <TableCell>{entry.day}</TableCell>
-                            <TableCell>
-                              <Box sx={{
-                                display: 'inline-block',
-                                px: 1,
-                                py: 0.5,
-                                borderRadius: 1,
-                                backgroundColor: entry.result === 'completed' ? '#e8f5e9' : '#ffebee',
-                                color: entry.result === 'completed' ? '#2e7d32' : '#c62828'
-                              }}>
-                                {entry.result === 'completed' ? 'Completed' : 'Failed'}
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {results.chapterProgression.map((entry, index) => {
+                          // Calculate a rough estimate of time for this chapter completion/failure
+                          // This is a rough approximation since we don't track exact day counts in chapterProgression
+                          const previousDays = results.chapterProgression
+                            .slice(0, index)
+                            .reduce((sum, prev) => sum + prev.day, 0);
+                          
+                          const estimatedSeconds = (previousDays + entry.day) * 2;
+                          const minutes = Math.floor(estimatedSeconds / 60);
+                          const seconds = estimatedSeconds % 60;
+                          
+                          return (
+                            <TableRow key={index}>
+                              <TableCell>{entry.chapter}</TableCell>
+                              <TableCell>{entry.day}</TableCell>
+                              <TableCell>
+                                <Box sx={{
+                                  display: 'inline-block',
+                                  px: 1,
+                                  py: 0.5,
+                                  borderRadius: 1,
+                                  backgroundColor: entry.result === 'completed' ? '#e8f5e9' : '#ffebee',
+                                  color: entry.result === 'completed' ? '#2e7d32' : '#c62828'
+                                }}>
+                                  {entry.result === 'completed' ? 'Completed' : 'Failed'}
+                                </Box>
+                              </TableCell>
+                              <TableCell>{`${minutes}:${seconds.toString().padStart(2, '0')}`}</TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </TableContainer>
