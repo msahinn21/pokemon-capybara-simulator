@@ -9,6 +9,7 @@ A Pokemon-style game simulator inspired by Capybara Go with chapter progression,
 - **Event System**: Configure various event types like battles, treasures, shops, and random encounters
 - **Battle Simulation**: Turn-based battle system with party mechanics (up to 3v3)
 - **Progression System**: Pokemon catching, leveling up, and evolution mechanics
+- **Real Player Time Estimation**: Calculates how long a real player would take to complete the game (each in-game day = 2 seconds of real player time)
 - **Detailed Analytics**: Comprehensive stats and metrics about gameplay progression
 - **Data Export**: Export simulation results to Excel for further analysis
 
@@ -64,7 +65,8 @@ This allows you to quickly run a simulation to see how the system works before c
 ### Results Tab
 
 1. **Key Metrics**: View critical stats like:
-   - Total playtime
+   - Total in-game days played
+   - Estimated real player time (based on 2 seconds per in-game day)
    - Chapters completed
    - Battle win rate
    - Pokemon caught/evolved
@@ -72,6 +74,7 @@ This allows you to quickly run a simulation to see how the system works before c
    - Power progression over time
    - Chapter completion results
    - Battle logs
+   - Time-based metrics
 3. **Data Export**: Download all results as an Excel file for further analysis
 
 ## How It Works
@@ -91,6 +94,7 @@ The simulator uses a turn-based system to model game progression:
 5. **Failure Cases**: If power requirements aren't met, the player:
    - Keeps their progress (gold, Pokemon)
    - Restarts the current chapter to try again
+6. **Real Player Time**: Each in-game day is estimated to take 2 seconds of real player time
 
 ## Combat System
 
